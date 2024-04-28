@@ -39,12 +39,13 @@ func main() {
 			fmt.Printf("\nReceived message from %s: %s\n", msg.Sender, msg.Text)
 		}
 	}()
+	rreader := bufio.NewReader(os.Stdin) //standard input
+	fmt.Print("Enter recipient's username: ")
+	recipient, _ := rreader.ReadString('\n')
+	recipient = strings.TrimSpace(recipient)
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin) //standard input
-			fmt.Print("Enter recipient's username: ")
-			recipient, _ := reader.ReadString('\n')
-			recipient = strings.TrimSpace(recipient)
 			fmt.Print("Enter message: ")
 			message, _ := reader.ReadString('\n')
 			message = strings.TrimSpace(message)
