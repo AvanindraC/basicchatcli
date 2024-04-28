@@ -11,7 +11,8 @@ import (
 )
 
 // struct containing message
-type Message struct {
+type Message struct { //struct with message and recipient
+	Sender    string `json:"sender"`
 	Recipient string `json:"recipient"`
 	Text      string `json:"text"`
 }
@@ -35,7 +36,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Failed to read message from WebSocket server: %v", err)
 			}
-			fmt.Printf("Received message from %s: %s\n", msg.Recipient, msg.Text)
+			fmt.Printf("\nReceived message from %s: %s\n", msg.Sender, msg.Text)
 		}
 	}()
 	go func() {
@@ -47,8 +48,8 @@ func main() {
 			fmt.Print("Enter message: ")
 			message, _ := reader.ReadString('\n')
 			message = strings.TrimSpace(message)
-			msg := Message{Recipient: recipient, Text: message} //converting to msg struct
-			err := conn.WriteJSON(msg)                          //converting struct to json
+			msg := Message{Sender: username, Recipient: recipient, Text: message} //converting to msg struct
+			err := conn.WriteJSON(msg)                                            //converting struct to json
 			if err != nil {
 				log.Fatalf("Failed to send message %v", err)
 			}

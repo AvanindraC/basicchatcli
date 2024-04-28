@@ -22,6 +22,7 @@ type Client struct { //struct with connection and username
 	username string
 }
 type Message struct { //struct with message and recipient
+	Sender    string `json:"sender"`
 	Recipient string `json:"recipient"`
 	Text      string `json:"text"`
 }
