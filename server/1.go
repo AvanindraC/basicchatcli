@@ -13,8 +13,8 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	clients = make(map[string]*Client) //map of all clients
-	mu      sync.Mutex                 //ensures that only one goroutine can access the clients map
+	clients = make(map[*websocket.Conn]*Client) //map of all clients
+	mu      sync.Mutex                          //ensures that only one goroutine can access the clients map
 )
 
 type Client struct { //struct with connection and username
@@ -43,9 +43,9 @@ func websockethandler(w http.ResponseWriter, r *http.Request) { //websocket hand
 		conn:     conn,
 		username: username,
 	} //makes new client
-	mu.Lock()                  //allows change in clients map
-	clients[username] = client //adds user to clients map
-	mu.Unlock()                //closes map
+	mu.Lock()              //allows change in clients map
+	clients[conn] = client //adds user connection to clients map
+	mu.Unlock()            //closes map
 	for {
 		var msg Message
 		err := conn.ReadJSON(&msg) //reads the json sent by client
@@ -54,19 +54,28 @@ func websockethandler(w http.ResponseWriter, r *http.Request) { //websocket hand
 			break
 		}
 		mu.Lock()
-		recipient, ok := clients[msg.Recipient] //adds the recipient of the message to clients map
+		recipientConn := findConn(msg.Recipient) //adds the recipient of the message to clients map
 		mu.Unlock()
-		if !ok {
+		if recipientConn != nil {
 			log.Printf("Recipient '%s' not found", msg.Recipient)
 			continue
 		}
-		err = recipient.conn.WriteJSON(msg) //sends message to the recipient in form of json
+		err = recipientConn.WriteJSON(msg) //sends message to the recipient in form of json
 		if err != nil {
 			log.Println("Error sending msg to recipient:", err)
 			continue
 		}
 	}
 }
+func findConn(username string) *websocket.Conn {
+	for conn, client := range clients {
+		if client.username == username {
+			return conn
+		}
+	}
+	return nil
+}
+
 func main() {
 	http.HandleFunc("/ws", websockethandler)
 	log.Println("Starting server on :8080")
